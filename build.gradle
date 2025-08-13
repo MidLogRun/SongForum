@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.5'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'SongForum'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    //Database:
+    implementation 'org.postgresql:postgresql:42.7.3'
+
+    // Utilities
+    implementation 'ch.qos.logback:logback-classic:1.4.14'
+    implementation 'commons-cli:commons-cli:1.6.0'
+
+    //jUnit
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //Mockito
+    testImplementation 'org.mockito:mockito-core:4.11.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.11.0'
+
+    // dotenv
+    implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+
+    //JSON
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.0'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.0'
+
+    // Spring Boot Service
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation "org.springframework.boot:spring-boot-starter-security" //password encryption
+    implementation "org.springframework.security:spring-security-web"
+    implementation "org.springframework.security:spring-security-config"
+    implementation 'org.springframework.boot:spring-boot-devtools'
+    implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
+    implementation 'javax.servlet.jsp:jsp-api:2.1'
+    implementation 'javax.servlet:jstl:1.2'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+
+    //REDIS
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    //JJWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

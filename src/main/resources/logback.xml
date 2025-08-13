@@ -1,0 +1,62 @@
+<configuration scan="true" debug="true">
+
+    <!-- Full blown logging appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="GREEN" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%green(%msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="YELLOW" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%yellow(%msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="CYAN" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%cyan(%msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File appender -->
+    <appender name="File_Output" class="ch.qos.logback.core.FileAppender">
+        <file>forum.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%msg</pattern>
+        </encoder>
+    </appender>
+
+
+    <!-- root stays WARN+ -->
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!-- HTTP logs in yellow only -->
+    <logger name="forum.http" level="INFO" additivity="false">
+        <appender-ref ref="YELLOW"/>
+    </logger>
+
+    <logger name="forum.http.server.service" level="INFO" additivity="false">
+        <appender-ref ref="YELLOW"/>
+    </logger>
+
+    <!-- HTTP server logs in yellow + file -->
+    <logger name="forum.http.server" level="INFO" additivity="false">
+        <appender-ref ref="GREEN"/>
+    </logger>
+
+    <!-- DATABASE DAO: INFO+ in yellow only, no propagation to root -->
+    <logger name="forum.database" level="INFO" additivity="false">
+        <appender-ref ref="CYAN"/>
+    </logger>
+
+</configuration>

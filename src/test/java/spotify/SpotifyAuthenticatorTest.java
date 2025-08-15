@@ -1,6 +1,6 @@
 package spotify;
 
-import http.server.spotify.SpotifyAuthenticator;
+import http.server.externalapis.spotify.SpotifyAuthenticator;
 import org.junit.jupiter.api.Test;
 
 import java.net.http.HttpResponse;

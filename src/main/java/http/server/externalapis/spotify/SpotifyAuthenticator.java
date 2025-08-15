@@ -1,10 +1,9 @@
-package http.server.spotify;
+package http.server.externalapis.spotify;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.cdimascio.dotenv.Dotenv;
-import org.apache.catalina.valves.ExtendedAccessLogValve;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

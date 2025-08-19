@@ -12,24 +12,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class RequestMaker {
-    Logger logger = LoggerFactory.getLogger(RequestMaker.class);
+public class Requester {
+    Logger logger = LoggerFactory.getLogger(Requester.class);
     private final HttpClient httpClient;
 
     RequestStrategy strategy;
 
-    public RequestMaker(RequestStrategy RequestStrategy) {
+    public Requester(RequestStrategy RequestStrategy) {
         this.httpClient = HttpClient.newBuilder().build();
         this.strategy = RequestStrategy;
-    }
-
-    private HttpRequest spotifyGetRequest(String url) {
-        return HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .header("Accept", "application/json")
-                .header("Authorization", "Bearer " + SpotifyAuthenticator.getInstance().getToken())
-                .build();
     }
 
 

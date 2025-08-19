@@ -6,6 +6,7 @@ import http.server.externalapis.spotify.ApiGetFailed;
 import http.server.externalapis.spotify.LastFmRequestStrategy;
 import http.server.json_readers.AlbumJsonException;
 import http.server.object_files.FmAlbum;
+import http.server.object_files.FmTrack;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,10 +37,18 @@ public class FmAlbumTest {
         assertNotNull(album, "The album object should never be null unless a json processing error occurred.");
         assertEquals(artist.toLowerCase(), album.artist().toLowerCase());
         assertEquals(title.toLowerCase(), album.title().toLowerCase());
-
     }
 
     @Test
-    public void test() {
+    public void testConvertLastFmTrackResponseToTrack() throws ApiGetFailed, AlbumJsonException, JsonProcessingException {
+        String artist = "Bon Iver";
+        String title = "beach baby";
+
+        FmTrack track = apiWrapper.getTrack(artist, title);
+        assertNotNull(track, "the track object should never be null");
+        assertEquals(track.name().toLowerCase(), title.toLowerCase());
+
+        System.out.println("track: " + track);
     }
+
 }

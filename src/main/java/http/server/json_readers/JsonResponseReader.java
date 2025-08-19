@@ -1,6 +1,5 @@
 package http.server.json_readers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import http.server.object_files.FmAlbum;
 import http.server.object_files.FmTrack;
@@ -8,7 +7,7 @@ import http.server.object_files.FmTrack;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JsonAlbumReader {
+public class JsonResponseReader {
 
 
     public static FmAlbum getAlbum(JsonNode node) throws AlbumJsonException {
@@ -34,7 +33,7 @@ public class JsonAlbumReader {
         return tags;
     }
 
-    private static List<FmTrack> getTracks(JsonNode node) throws AlbumJsonException {
+    private static List<FmTrack> getTracks(JsonNode node, String albumName) throws AlbumJsonException {
         JsonNode tracksArray = node.get("track");
         if (tracksArray == null) {
             throw new AlbumJsonException("No tracks found");
@@ -45,7 +44,8 @@ public class JsonAlbumReader {
             tracks.add(new FmTrack(
                     trackNode.get("duration").asInt(),
                     trackNode.get("url").asText(),
-                    trackNode.get("name").asText()
+                    trackNode.get("name").asText(),
+                    albumName
             ));
         }
         return tracks;
@@ -58,7 +58,7 @@ public class JsonAlbumReader {
         Integer listeners = Integer.parseInt(album.get("listeners").asText());
 
         List<String> tags = getTags(album.get("tags"));
-        List<FmTrack> tracks = getTracks(album.get("tracks"));
+        List<FmTrack> tracks = getTracks(album.get("tracks"), title);
 
         JsonNode wikiNode = album.get("wiki");
         String summary = wikiNode.get("summary").asText();
@@ -66,4 +66,19 @@ public class JsonAlbumReader {
         return new FmAlbum(artist, title, tags, tracks, url, summary, listeners);
     }
 
+
+    public static FmTrack getTrack(JsonNode node) throws AlbumJsonException {
+        JsonNode trackNode = node.get("track");
+        if (trackNode == null) {
+            throw new AlbumJsonException("trackNode is null");
+        }
+
+        Integer duration = Integer.parseInt(trackNode.get("duration").asText()) / 1000; //divide by 1000 to get seconds
+        String url = trackNode.get("url").asText();
+        String name = trackNode.get("name").asText();
+        String albumName = trackNode.get("album").get("title").asText();
+
+        return new FmTrack(duration, url, name, albumName);
+
+    }
 }

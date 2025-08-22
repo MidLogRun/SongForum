@@ -8,6 +8,7 @@ import http.server.externalapis.spotify.ApiGetFailed;
 import http.server.json_readers.AlbumJsonException;
 import http.server.json_readers.JsonResponseReader;
 import http.server.object_files.FmAlbum;
+import http.server.object_files.FmArtist;
 import http.server.object_files.FmTrack;
 
 import org.slf4j.Logger;
@@ -37,7 +38,8 @@ public class LastFmWrapper {
     public FmAlbum getAlbum(String artist, String albumName) throws ApiGetFailed, JsonProcessingException, AlbumJsonException {
         String response = getAlbumResponse(artist, albumName);
         JsonNode node = mapper.readTree(response);
-        return JsonResponseReader.getAlbum(node);
+        FmArtist fmArtist = getArtist(artist);
+        return JsonResponseReader.getAlbum(node, fmArtist);
     }
 
     private String getTrackResponse(String artist, String trackName) throws ApiGetFailed {
@@ -54,6 +56,22 @@ public class LastFmWrapper {
         String response = getTrackResponse(artist, trackName);
         JsonNode node = mapper.readTree(response);
         return JsonResponseReader.getTrack(node);
+    }
+
+    private String getArtistResponse(String artist) throws ApiGetFailed {
+        LastFmUrl url = new LastFmUrl(BASE_URL).getArtistInfo(artist);
+        try {
+            return requester.sendGetRequest(url.buildString()).body();
+        } catch (ApiGetFailed e) {
+            logger.info("ApiGetFailed error in getArtistResponse: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    public FmArtist getArtist(String artist) throws ApiGetFailed, JsonProcessingException, AlbumJsonException {
+        String response = getArtistResponse(artist);
+        JsonNode node = mapper.readTree(response);
+        return JsonResponseReader.getArtist(node);
     }
 
 

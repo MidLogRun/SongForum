@@ -1,4 +1,9 @@
 package database;
 
-public class NotSavedException extends Exception {
+import java.sql.SQLException;
+
+public class NotSavedException extends SQLException {
+    public NotSavedException(String message) {
+        super(message);
+    }
 }

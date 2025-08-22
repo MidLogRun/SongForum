@@ -11,15 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Connector {
-    Logger logger = LoggerFactory.getLogger(Connector.class);
+    static Logger logger = LoggerFactory.getLogger(Connector.class);
     static Connection connection;
-    Dotenv dotenv = Dotenv
+    static Dotenv dotenv = Dotenv
             .configure()
             .directory("src/main/resources")
             .load();
 
 
-    public Connection getConnection() throws SQLException {
+    public static Connection getConnection() throws SQLException {
         String url = dotenv.get("DB_URL");
         String user = dotenv.get("DB_USER");
         String password = "";

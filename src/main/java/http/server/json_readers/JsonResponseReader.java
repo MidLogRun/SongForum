@@ -2,6 +2,7 @@ package http.server.json_readers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import http.server.object_files.FmAlbum;
+import http.server.object_files.FmArtist;
 import http.server.object_files.FmTrack;
 
 import java.util.ArrayList;
@@ -10,12 +11,12 @@ import java.util.List;
 public class JsonResponseReader {
 
 
-    public static FmAlbum getAlbum(JsonNode node) throws AlbumJsonException {
+    public static FmAlbum getAlbum(JsonNode node, FmArtist fmArtist) throws AlbumJsonException {
         JsonNode albumArray = node.get("album");
         if (albumArray == null) {
             throw new AlbumJsonException("No album found");
         }
-        return buildAlbum(albumArray);
+        return buildAlbum(albumArray, fmArtist);
     }
 
     private static List<String> getTags(JsonNode node) throws AlbumJsonException {
@@ -51,8 +52,7 @@ public class JsonResponseReader {
         return tracks;
     }
 
-    private static FmAlbum buildAlbum(JsonNode album) throws AlbumJsonException {
-        String artist = album.get("artist").asText();
+    private static FmAlbum buildAlbum(JsonNode album, FmArtist artist) throws AlbumJsonException {
         String title = album.get("name").asText();
         String url = album.get("url").asText();
         Integer listeners = Integer.parseInt(album.get("listeners").asText());
@@ -79,6 +79,32 @@ public class JsonResponseReader {
         String albumName = trackNode.get("album").get("title").asText();
 
         return new FmTrack(duration, url, name, albumName);
+    }
 
+    private static List<String> getSimilarArtists(JsonNode node) {
+        JsonNode artistsArray = node.get("artist");
+        if (artistsArray == null) {
+            return new ArrayList<>();
+        }
+        List<String> similarArtists = new ArrayList<>();
+        for (JsonNode artistNode : artistsArray) {
+            similarArtists.add(artistNode.get("name").asText());
+        }
+        return similarArtists;
+    }
+
+
+    public static FmArtist getArtist(JsonNode node) throws AlbumJsonException {
+        JsonNode artistNode = node.get("artist");
+        if (artistNode == null) {
+            throw new AlbumJsonException("artistNode is null");
+        }
+
+        String name = artistNode.get("name").asText();
+        String url = artistNode.get("url").asText();
+        List<String> tags = getTags(artistNode.get("tags"));
+        List<String> similar = getSimilarArtists(artistNode.get("similar"));
+        String summary = artistNode.get("bio").get("summary").asText();
+        return new FmArtist(name, url, tags, similar, summary);
     }
 }

@@ -120,7 +120,7 @@ public abstract class AbstractRepository<T> implements Table<T> {
         }
     }
 
-    public void batchInsert(Collection<T> entities) {
+    public void batchInsert(Collection<T> entities) throws SQLException {
         try {
             prepareBatch(insertSql(),
                     (preparedStatement, entity) -> {
@@ -131,6 +131,7 @@ public abstract class AbstractRepository<T> implements Table<T> {
                         } catch (SqlBindException e) {
                             throw new RuntimeException(e);
                         }
+
                     }, entities);
         } catch (SQLException e) {
             throw new RuntimeException(e);

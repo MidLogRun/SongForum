@@ -14,6 +14,9 @@ import http.server.object_files.FmTrack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LastFmWrapper {
     Logger logger = LoggerFactory.getLogger(LastFmWrapper.class);
     private static final String BASE_URL = "https://ws.audioscrobbler.com/2.0/";
@@ -27,6 +30,16 @@ public class LastFmWrapper {
 
     private String getAlbumResponse(String artist, String album) throws ApiGetFailed {
         LastFmUrl url = new LastFmUrl(BASE_URL).getAlbumInfo(artist, album);
+        try {
+            return requester.sendGetRequest(url.buildString()).body();
+        } catch (ApiGetFailed e) {
+            logger.info("ApiGetFailed error in getAlbumResponse: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    private String getArtistTopAlbumResponse(String artist) throws ApiGetFailed {
+        LastFmUrl url = new LastFmUrl(BASE_URL).getArtistTopAlbums(artist);
         try {
             return requester.sendGetRequest(url.buildString()).body();
         } catch (ApiGetFailed e) {
@@ -75,4 +88,29 @@ public class LastFmWrapper {
     }
 
 
+    public List<FmArtist> getArtists(List<String> artistNames) throws ApiGetFailed, JsonProcessingException, AlbumJsonException {
+        List<FmArtist> artists = new ArrayList<>();
+        for (String artistName : artistNames) {
+            String response = getArtistResponse(artistName);
+            JsonNode node = mapper.readTree(response);
+            artists.add(JsonResponseReader.getArtist(node));
+        }
+        return artists;
+    }
+
+    public List<FmAlbum> getAllAlbumsByArtist(String artist) throws ApiGetFailed, JsonProcessingException, AlbumJsonException {
+        List<FmAlbum> albums = new ArrayList<>();
+        String response = getArtistTopAlbumResponse(artist);
+        JsonNode node = mapper.readTree(response);
+        List<String> albumNames = JsonResponseReader.extractAlbumNames(node);
+        FmArtist fmArtist = getArtist(artist);
+
+        for (String albumName : albumNames) {
+            String albumResponse = getAlbumResponse(artist, albumName);
+            JsonNode albumResponseNode = mapper.readTree(albumResponse);
+            if (JsonResponseReader.isValidAlbum(albumResponseNode))
+                albums.add(JsonResponseReader.getAlbum(albumResponseNode, fmArtist)); // Do I return null from getAlbum()?
+        }
+        return albums;
+    }
 }

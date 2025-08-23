@@ -25,7 +25,36 @@ public class LastFmUrl extends ExternalApiUrl {
         }
 
         str = new String(chars);
+        str = str.replace("%", "%25");
         str = str.replace(" ", "%20"); //replace spaces with %20 for urls
+        str = str.replace("!", "%21");
+        str = str.replace("\"", "%22");
+        str = str.replace("#", "%23");
+        str = str.replace("$", "%24");
+        str = str.replace("&", "%26");
+        str = str.replace("\'", "%27");
+        str = str.replace("(", "%28");
+        str = str.replace(")", "%29");
+        str = str.replace("*", "%2A");
+        str = str.replace("+", "%2B");
+        str = str.replace(",", "%2C");
+        str = str.replace("/", "%2F");
+        str = str.replace(":", "%3A");
+        str = str.replace(";", "%3B");
+        str = str.replace("<", "%3C");
+        str = str.replace("=", "%3D");
+        str = str.replace(">", "%3E");
+        str = str.replace("?", "%3F");
+        str = str.replace("@", "%40");
+        str = str.replace("[", "%5B");
+        str = str.replace("\\", "%5C");
+        str = str.replace("]", "%5D");
+        str = str.replace("^", "%5E");
+        str = str.replace("`", "%60");
+        str = str.replace("{", "%7B");
+        str = str.replace("|", "%7C");
+        str = str.replace("}", "%7D");
+
         return str;
     }
 
@@ -89,6 +118,13 @@ public class LastFmUrl extends ExternalApiUrl {
         track = cleanString(track);
         appendQueryParam("method", "track.search");
         appendQueryParam("track", track);
+        return this;
+    }
+
+    public LastFmUrl getArtistTopAlbums(String artist) {
+        artist = cleanString(artist);
+        appendQueryParam("method", "artist.gettopalbums");
+        appendQueryParam("artist", artist);
         return this;
     }
 }

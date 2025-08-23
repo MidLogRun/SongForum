@@ -19,13 +19,15 @@ public class JsonResponseReader {
         return buildAlbum(albumArray, fmArtist);
     }
 
-    private static List<String> getTags(JsonNode node) throws AlbumJsonException {
+    private static List<String> getTags(JsonNode node) {
         JsonNode tagsArray = node.get("tag");
-        if (tagsArray == null) {
-            throw new AlbumJsonException("No tags found");
+        List<String> tags = new ArrayList<>();
+        if (tagsArray == null || !tagsArray.isArray()) {
+            return tags;
         }
 
-        List<String> tags = new ArrayList<>();
+
+
         for (JsonNode tagNode : tagsArray) {
             String name = tagNode.get("name").asText();
             tags.add(name);
@@ -35,13 +37,14 @@ public class JsonResponseReader {
     }
 
     private static List<FmTrack> getTracks(JsonNode node, String albumName) throws AlbumJsonException {
-        JsonNode tracksArray = node.get("track");
-        if (tracksArray == null) {
+        if (node == null) throw new AlbumJsonException("No track found");
+        JsonNode tracksNode = node.get("track");
+        if (tracksNode == null || !tracksNode.isArray()) {
             throw new AlbumJsonException("No tracks found");
         }
 
         List<FmTrack> tracks = new ArrayList<>();
-        for (JsonNode trackNode : tracksArray) {
+        for (JsonNode trackNode : tracksNode) {
             tracks.add(new FmTrack(
                     trackNode.get("duration").asInt(),
                     trackNode.get("url").asText(),
@@ -52,16 +55,40 @@ public class JsonResponseReader {
         return tracks;
     }
 
-    private static FmAlbum buildAlbum(JsonNode album, FmArtist artist) throws AlbumJsonException {
-        String title = album.get("name").asText();
-        String url = album.get("url").asText();
-        Integer listeners = Integer.parseInt(album.get("listeners").asText());
+    public static boolean isValidAlbum(JsonNode node) {
+        JsonNode albumArray = node.get("album");
+        if (albumArray == null) {
+            return false;
+        }
 
-        List<String> tags = getTags(album.get("tags"));
-        List<FmTrack> tracks = getTracks(album.get("tracks"), title);
+        if (albumArray.get("name").asText() == null) return false;
+        if (albumArray.get("url").asText() == null) return false;
+        if (albumArray.get("listeners").asText() == null) return false;
+        List<String> tags = getTags(albumArray.get("tags"));
+        if (tags.isEmpty()) return false;
+        try {
+            getTracks(albumArray.get("tracks"), albumArray.get("name").asText());
+        } catch (AlbumJsonException e) {
+            return false;
+        }
 
-        JsonNode wikiNode = album.get("wiki");
-        String summary = wikiNode.get("summary").asText();
+        return true;
+    }
+
+    private static FmAlbum buildAlbum(JsonNode albumArrayNode, FmArtist artist) throws AlbumJsonException {
+        String title = albumArrayNode.get("name").asText();
+        String url = albumArrayNode.get("url").asText();
+        Integer listeners = Integer.parseInt(albumArrayNode.get("listeners").asText());
+
+        List<String> tags = getTags(albumArrayNode.get("tags"));
+        List<FmTrack> tracks = getTracks(albumArrayNode.get("tracks"), title);
+
+        String summary = "";
+        JsonNode wikiNode = albumArrayNode.get("wiki");
+        if (wikiNode != null) {
+            summary = wikiNode.get("summary").asText();
+        }
+
 
         return new FmAlbum(artist, title, tags, tracks, url, summary, listeners);
     }
@@ -107,4 +134,21 @@ public class JsonResponseReader {
         String summary = artistNode.get("bio").get("summary").asText();
         return new FmArtist(name, url, tags, similar, summary);
     }
+
+    public static List<String> extractAlbumNames(JsonNode node) throws AlbumJsonException {
+        JsonNode topArray = node.get("topalbums");
+        if (topArray == null) {
+            throw new AlbumJsonException("topalbums is null");
+        }
+        JsonNode albumsArray = topArray.get("album");
+        if (albumsArray == null) {
+            throw new AlbumJsonException("albums is null");
+        }
+        List<String> albumNames = new ArrayList<>();
+        for (JsonNode albumNode : albumsArray) {
+            albumNames.add(albumNode.get("name").asText());
+        }
+        return albumNames;
+    }
+
 }

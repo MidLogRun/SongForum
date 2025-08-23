@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import java.net.http.HttpResponse;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import database.*;
 
@@ -116,5 +118,77 @@ public class AlbumRepositoryTest {
         }
     }
 
+    @Test
+    public void testInsertAllAlbumsByArtist() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+        String artist = "Bon Iver";
+        List<FmAlbum> albums = lastFmWrapper.getAllAlbumsByArtist(artist);
+        try {
+            for (FmAlbum album : albums) {
+                repository.insert(album);
+                assertTrue(repository.exists(album));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
 
+
+    @Test
+    public void testInsertAllAlbumsByArtist2() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+        String artist = "Mk.gee";
+        List<FmAlbum> albums = lastFmWrapper.getAllAlbumsByArtist(artist);
+        try {
+            for (FmAlbum album : albums) {
+                repository.insert(album);
+                assertTrue(repository.exists(album));
+            }
+        } catch (SQLException e) {
+//            for (FmAlbum album : albums) {
+//                assertThrows(NotSavedException.class, () -> {
+//                    repository.insert(album);
+//                });
+//            }
+
+        }
+    }
+
+    @Test
+    public void testInsertAllAlbumsByArtist3() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+        String artist = "Dijon";
+        List<FmAlbum> albums = lastFmWrapper.getAllAlbumsByArtist(artist);
+        try {
+            for (FmAlbum album : albums) {
+                repository.insert(album);
+                assertTrue(repository.exists(album));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testInsertAllAlbumsByArtist4() throws AlbumJsonException, ApiGetFailed, JsonProcessingException, SQLException {
+        String artist = "Alvvays";
+        List<FmAlbum> albums = lastFmWrapper.getAllAlbumsByArtist(artist);
+        for (FmAlbum album : albums) {
+            repository.insert(album);
+            assertTrue(repository.exists(album));
+        }
+    }
+
+
+    @Test
+    public void testInsertTwoStar() throws AlbumJsonException, ApiGetFailed, JsonProcessingException, NotSavedException, SQLException {
+        String artist = "Mk.gee";
+        String title = "Two Star & The Dream Police";
+        FmAlbum album = lastFmWrapper.getAlbum(artist, title);
+        try {
+            repository.insert(album);
+            assertTrue(repository.exists(album));
+        } catch (NotSavedException e) {
+            assertThrows(NotSavedException.class, () -> {
+                repository.insert(album);
+            });
+        }
+    }
 }

@@ -66,8 +66,10 @@ public class AlbumRepository extends AbstractRepository<FmAlbum> {
         super.doInsert(album);
         artistRepository.doInsert(album.artist());
         trackRepository.batchInsert(album.tracks());
-        tagRepository.batchInsert(album.tags());
-        joinTags(album);
+        if (!album.tags().isEmpty()) {
+            tagRepository.batchInsert(album.tags());
+            joinTags(album);
+        }
     }
 
     private void joinTags(FmAlbum album) throws SQLException {

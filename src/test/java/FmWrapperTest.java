@@ -10,6 +10,8 @@ import http.server.object_files.FmTrack;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -55,6 +57,14 @@ public class FmWrapperTest {
         FmArtist fmArtist = apiWrapper.getArtist(artist);
         assertNotNull(fmArtist, "the artist object should never be null");
         System.out.println(fmArtist);
+    }
+
+    @Test
+    public void testGetAllAlbumsOfArtist() throws ApiGetFailed, AlbumJsonException, JsonProcessingException {
+        String artist = "Bon Iver";
+        List<FmAlbum> albums = apiWrapper.getAllAlbumsByArtist(artist);
+        assertTrue(albums.size() > 4);
+        albums.forEach(System.out::println);
     }
 
 }

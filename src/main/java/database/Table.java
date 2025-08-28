@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-public interface Table<T> {
+public interface Table<T, ID> {
     Connection getConnection() throws SQLException;
 
-    boolean exists(T entity) throws SQLException;
+    boolean exists(ID id);
 
     void insert(T entity) throws SQLException, NotSavedException;
 

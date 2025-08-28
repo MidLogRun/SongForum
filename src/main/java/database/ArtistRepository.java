@@ -1,8 +1,7 @@
 package database;
 
-import http.server.object_files.FmAlbum;
+import http.server.object_files.ArtistId;
 import http.server.object_files.FmArtist;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,7 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ArtistRepository extends AbstractRepository<FmArtist> {
+public class ArtistRepository extends AbstractRepository<FmArtist, ArtistId> {
     private final TagRepository tagRepository = new TagRepository(this.connection);
 
     public ArtistRepository(Connection connection) {
@@ -50,16 +49,19 @@ public class ArtistRepository extends AbstractRepository<FmArtist> {
     }
 
     @Override
-    public boolean exists(FmArtist artist) throws SQLException {
-        String sql = "SELECT 1 FROM artist WHERE name = ?";
+    public boolean exists(ArtistId id) {
+        String sql = "SELECT * FROM artist WHERE name = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setString(1, artist.name());
+            preparedStatement.setString(1, id.name());
             ResultSet resultSet = preparedStatement.executeQuery();
             return resultSet.next();
+        } catch (SQLException e) {
+            logger.info("SQLException while checking if artist exists {}", e.getMessage());
+            return false;
         }
     }
 
-    private boolean existsName(String name) throws SQLException {
+    private boolean exists(String name) throws SQLException {
         String sql = "SELECT 1 FROM artist WHERE name = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, name);
@@ -141,7 +143,7 @@ public class ArtistRepository extends AbstractRepository<FmArtist> {
         int id1 = getArtistIdByName(artist.name());
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             for (String name : artist.similarArtists()) {
-                if (existsName(name)) {
+                if (exists(name)) {
                     logger.info("Similar artist exists. Connecting {} to {} ", artist.name(), name);
 
 //                    FmArtist similarArtist = getArtistByName(name);
@@ -177,7 +179,7 @@ public class ArtistRepository extends AbstractRepository<FmArtist> {
     }
 
     private void joinTags(FmArtist artist) throws SQLException {
-        String sql = "INSERT INTO artist_tag VALUES (?, ?) ON CONFLICT DO NOTHING";
+        String sql = "INSERT INTO artist_tag VALUES (?, ?) ON CONFLICT DO NOTHING"; //This works
         int albumId = getArtistIdByName(artist.name());
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             for (String tag : artist.tags()) {

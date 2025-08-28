@@ -1,13 +1,17 @@
 package database;
 
+import http.server.object_files.AlbumId;
 import http.server.object_files.FmAlbum;
+import http.server.object_files.FmArtist;
+import http.server.object_files.FmTrack;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
-public class AlbumRepository extends AbstractRepository<FmAlbum> {
+public class AlbumRepository extends AbstractRepository<FmAlbum, AlbumId> {
 
     private final ArtistRepository artistRepository;
     private final TrackRepository trackRepository;
@@ -20,16 +24,6 @@ public class AlbumRepository extends AbstractRepository<FmAlbum> {
         tagRepository = new TagRepository(connection);
     }
 
-    @Override
-    public boolean exists(FmAlbum album) throws SQLException {
-        String sql = "SELECT 1 FROM album WHERE artist = ? AND title = ?";
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setString(1, album.artist().name());
-            preparedStatement.setString(2, album.title());
-            ResultSet resultSet = preparedStatement.executeQuery();
-            return resultSet.next();
-        }
-    }
 
     @Override
     void bindInsert(PreparedStatement preparedStatement, FmAlbum album) throws SqlBindException {
@@ -73,8 +67,8 @@ public class AlbumRepository extends AbstractRepository<FmAlbum> {
     }
 
     private void joinTags(FmAlbum album) throws SQLException {
-        String sql = "INSERT INTO album_tag VALUES (?, ?)";
-        int albumId = getAlbumById(album);
+        String sql = "INSERT INTO album_tag VALUES (?, ?) ON CONFLICT DO NOTHING";
+        int albumId = getAlbumId(album);
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             for (String tag : album.tags()) {
                 Integer tagId = tagRepository.getTagId(tag);
@@ -108,7 +102,7 @@ public class AlbumRepository extends AbstractRepository<FmAlbum> {
     String insertSql() {
         return """
                 INSERT INTO album (artist, title, num_tags, num_tracks, url, summary, num_listeners)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING
                 """;
     }
 
@@ -117,7 +111,7 @@ public class AlbumRepository extends AbstractRepository<FmAlbum> {
         return "";
     }
 
-    public int getAlbumById(FmAlbum album) throws SQLException {
+    public int getAlbumId(FmAlbum album) throws SQLException {
         String query = "SELECT id FROM album WHERE artist = ? AND title = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, album.artist().name());
@@ -132,13 +126,69 @@ public class AlbumRepository extends AbstractRepository<FmAlbum> {
         }
     }
 
+
     @Override
     String deleteSql() {
         return "DELETE FROM album WHERE artist = ? AND title = ?";
     }
 
     @Override
+    public boolean exists(AlbumId id) {
+        String sql = "SELECT 1 FROM album WHERE artist = ? AND title = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, id.artistName());
+            preparedStatement.setString(2, id.title());
+            ResultSet resultSet = preparedStatement.executeQuery();
+            return resultSet.next();
+        } catch (SQLException e) {
+            logger.error("SQLException while checking if album exists", e);
+            return false;
+        }
+
+    }
+
+    @Override
     public Connection getConnection() throws SQLException {
         return this.connection;
+    }
+
+    private List<FmTrack> getTracks(String title) throws SQLException {
+        return trackRepository.getTracksForAlbum(title);
+    }
+
+    private List<String> getTags(Integer albumId) throws SQLException {
+        return tagRepository.getAlbumTags(albumId);
+    }
+
+    private FmArtist getArtist(String name) throws SQLException {
+        return artistRepository.getArtistByName(name);
+    }
+
+
+    public FmAlbum getAlbum(AlbumId id) throws SQLException {
+        String query = "SELECT * FROM album WHERE title = ? AND artist = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, id.title());
+            preparedStatement.setString(2, id.artistName());
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    Integer albumId = resultSet.getInt("id");
+                    return new FmAlbum(getArtist(id.artistName()),
+                            id.title(),
+                            getTags(albumId),
+                            getTracks(id.title()),
+                            resultSet.getString("url"),
+                            resultSet.getString("summary"),
+                            resultSet.getInt("num_listeners"));
+                } else
+                    throw new NotFoundException("album not found");
+            } catch (SQLException e) {
+                throw new NotFoundException("SQL exception caught in getAlbum" + e.getMessage());
+            }
+        } catch (SQLException e) {
+            throw new NotFoundException("SQL exception caught in getAlbum" + e.getMessage());
+        }
+
     }
 }

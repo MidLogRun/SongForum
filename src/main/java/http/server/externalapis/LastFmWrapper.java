@@ -5,8 +5,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import http.server.externalapis.spotify.ApiGetFailed;
-import http.server.json_readers.AlbumJsonException;
+import http.server.json_readers.JsonResponseReaderException;
 import http.server.json_readers.JsonResponseReader;
+import http.server.object_files.AlbumId;
 import http.server.object_files.FmAlbum;
 import http.server.object_files.FmArtist;
 import http.server.object_files.FmTrack;
@@ -48,7 +49,14 @@ public class LastFmWrapper {
         }
     }
 
-    public FmAlbum getAlbum(String artist, String albumName) throws ApiGetFailed, JsonProcessingException, AlbumJsonException {
+    public FmAlbum getAlbum(AlbumId id) throws ApiGetFailed, JsonResponseReaderException, JsonProcessingException {
+        String response = getAlbumResponse(id.artistName(), id.title());
+        JsonNode node = mapper.readTree(response);
+        FmArtist fmArtist = getArtist(id.artistName());
+        return JsonResponseReader.getAlbum(node, fmArtist);
+    }
+
+    public FmAlbum getAlbum(String artist, String albumName) throws ApiGetFailed, JsonProcessingException, JsonResponseReaderException {
         String response = getAlbumResponse(artist, albumName);
         JsonNode node = mapper.readTree(response);
         FmArtist fmArtist = getArtist(artist);
@@ -65,7 +73,7 @@ public class LastFmWrapper {
         }
     }
 
-    public FmTrack getTrack(String artist, String trackName) throws ApiGetFailed, JsonProcessingException, AlbumJsonException {
+    public FmTrack getTrack(String artist, String trackName) throws ApiGetFailed, JsonProcessingException, JsonResponseReaderException {
         String response = getTrackResponse(artist, trackName);
         JsonNode node = mapper.readTree(response);
         return JsonResponseReader.getTrack(node);
@@ -81,14 +89,14 @@ public class LastFmWrapper {
         }
     }
 
-    public FmArtist getArtist(String artist) throws ApiGetFailed, JsonProcessingException, AlbumJsonException {
+    public FmArtist getArtist(String artist) throws ApiGetFailed, JsonProcessingException, JsonResponseReaderException {
         String response = getArtistResponse(artist);
         JsonNode node = mapper.readTree(response);
         return JsonResponseReader.getArtist(node);
     }
 
 
-    public List<FmArtist> getArtists(List<String> artistNames) throws ApiGetFailed, JsonProcessingException, AlbumJsonException {
+    public List<FmArtist> getArtists(List<String> artistNames) throws ApiGetFailed, JsonProcessingException, JsonResponseReaderException {
         List<FmArtist> artists = new ArrayList<>();
         for (String artistName : artistNames) {
             String response = getArtistResponse(artistName);
@@ -98,7 +106,7 @@ public class LastFmWrapper {
         return artists;
     }
 
-    public List<FmAlbum> getAllAlbumsByArtist(String artist) throws ApiGetFailed, JsonProcessingException, AlbumJsonException {
+    public List<FmAlbum> getAllAlbumsByArtist(String artist) throws ApiGetFailed, JsonProcessingException, JsonResponseReaderException {
         List<FmAlbum> albums = new ArrayList<>();
         String response = getArtistTopAlbumResponse(artist);
         JsonNode node = mapper.readTree(response);

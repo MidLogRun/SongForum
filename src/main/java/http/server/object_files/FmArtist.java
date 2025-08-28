@@ -1,5 +1,6 @@
 package http.server.object_files;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public record FmArtist(String name,
@@ -7,6 +8,12 @@ public record FmArtist(String name,
                        List<String> tags,
                        List<String> similarArtists,
                        String summary) {
+
+
+    public FmArtist(String name) {
+        this(name, "", List.of(""), List.of(""), "");
+    }
+
 
     @Override
     public String toString() {

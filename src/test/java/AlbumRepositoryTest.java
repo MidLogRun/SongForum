@@ -1,22 +1,16 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.jayway.jsonpath.internal.function.sequence.Last;
 import database.AlbumRepository;
 import http.server.externalapis.LastFmWrapper;
-import http.server.externalapis.LastFmUrl;
 import http.server.externalapis.Requester;
 import http.server.externalapis.spotify.ApiGetFailed;
 import http.server.externalapis.spotify.LastFmRequestStrategy;
-import http.server.json_readers.AlbumJsonException;
+import http.server.json_readers.JsonResponseReaderException;
+import http.server.object_files.AlbumId;
 import http.server.object_files.FmAlbum;
-import http.server.object_files.FmTrack;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
-import java.net.http.HttpResponse;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 import database.*;
@@ -25,13 +19,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AlbumRepositoryTest {
 
-    AlbumRepository repository;
-    Connection connection;
-    LastFmWrapper lastFmWrapper;
-    Requester requester;
+    static AlbumRepository repository;
+    static Connection connection;
+    static LastFmWrapper lastFmWrapper;
+    static Requester requester;
 
-    @BeforeEach
-    public void setUp() throws SQLException {
+    @BeforeAll
+    public static void setUp() throws SQLException {
         connection = Connector.getConnection();
         repository = new AlbumRepository(connection);
         assertNotNull(repository);
@@ -40,23 +34,27 @@ public class AlbumRepositoryTest {
         lastFmWrapper = new LastFmWrapper(requester);
     }
 
-    @AfterEach
-    public void tearDown() throws SQLException {
+    @AfterAll
+    public static void tearDown() throws SQLException {
         if (connection != null && !connection.isClosed()) {
             connection.close();
         }
     }
 
+    public AlbumId identify(FmAlbum album) {
+        return new AlbumId(album.title(), album.artist().name());
+    }
+
     @Test
-    public void testInsertAndDeleteOneAlbum() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void testInsertAndDeleteOneAlbum() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         String artist = "Bon Iver";
         String title = "22, A Million";
         FmAlbum album = lastFmWrapper.getAlbum(artist, title);
         try {
             repository.insert(album);
-            assertTrue(repository.exists(album));
+            assertTrue(repository.exists(identify(album)));
             repository.delete(album);
-            assertFalse(repository.exists(album));
+            assertFalse(repository.exists(identify(album)));
         } catch (NotSavedException e) {
             System.err.println("Not Saved: " + e.getMessage());
         } catch (SQLException e) {
@@ -67,16 +65,16 @@ public class AlbumRepositoryTest {
     }
 
     @Test
-    public void testInsertAlbumInsertsArtistTracksAndTags() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void testInsertAlbumInsertsArtistTracksAndTags() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         String artist = "Bon Iver";
         String title = "22, A Million";
         FmAlbum album = lastFmWrapper.getAlbum(artist, title);
 
         try {
             repository.insert(album);
-            assertTrue(repository.exists(album));
+            assertTrue(repository.exists(identify(album)));
             repository.delete(album);
-            assertFalse(repository.exists(album));
+            assertFalse(repository.exists(identify(album)));
         } catch (NotSavedException e) {
             System.err.println("Not Saved: " + e.getMessage());
         } catch (SQLException e) {
@@ -87,13 +85,13 @@ public class AlbumRepositoryTest {
     }
 
     @Test
-    public void testPermanentInsertAlbum() throws AlbumJsonException, ApiGetFailed, JsonProcessingException, NotSavedException, SQLException {
+    public void testPermanentInsertAlbum() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException, NotSavedException, SQLException {
         String artist = "The Killers";
         String title = "Hot Fuss";
         FmAlbum album = lastFmWrapper.getAlbum(artist, title);
         try {
             repository.insert(album);
-            assertTrue(repository.exists(album));
+            assertTrue(repository.exists(identify(album)));
 
         } catch (NotSavedException e) {
             assertThrows(NotSavedException.class, () -> {
@@ -103,13 +101,13 @@ public class AlbumRepositoryTest {
     }
 
     @Test
-    public void testPermanentInsert2() throws AlbumJsonException, ApiGetFailed, JsonProcessingException, SQLException {
+    public void testPermanentInsert2() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException, SQLException {
         String artist = "Bon Iver";
         String title = "i,i";
         FmAlbum album = lastFmWrapper.getAlbum(artist, title);
         try {
             repository.insert(album);
-            assertTrue(repository.exists(album));
+            assertTrue(repository.exists(identify(album)));
 
         } catch (NotSavedException e) {
             assertThrows(NotSavedException.class, () -> {
@@ -119,13 +117,13 @@ public class AlbumRepositoryTest {
     }
 
     @Test
-    public void testInsertAllAlbumsByArtist() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void testInsertAllAlbumsByArtist() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         String artist = "Bon Iver";
         List<FmAlbum> albums = lastFmWrapper.getAllAlbumsByArtist(artist);
         try {
             for (FmAlbum album : albums) {
                 repository.insert(album);
-                assertTrue(repository.exists(album));
+                assertTrue(repository.exists(identify(album)));
             }
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
@@ -134,13 +132,13 @@ public class AlbumRepositoryTest {
 
 
     @Test
-    public void testInsertAllAlbumsByArtist2() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void testInsertAllAlbumsByArtist2() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         String artist = "Mk.gee";
         List<FmAlbum> albums = lastFmWrapper.getAllAlbumsByArtist(artist);
         try {
             for (FmAlbum album : albums) {
                 repository.insert(album);
-                assertTrue(repository.exists(album));
+                assertTrue(repository.exists(identify(album)));
             }
         } catch (SQLException e) {
 //            for (FmAlbum album : albums) {
@@ -153,13 +151,13 @@ public class AlbumRepositoryTest {
     }
 
     @Test
-    public void testInsertAllAlbumsByArtist3() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void testInsertAllAlbumsByArtist3() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         String artist = "Dijon";
         List<FmAlbum> albums = lastFmWrapper.getAllAlbumsByArtist(artist);
         try {
             for (FmAlbum album : albums) {
                 repository.insert(album);
-                assertTrue(repository.exists(album));
+                assertTrue(repository.exists(identify(album)));
             }
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
@@ -167,24 +165,24 @@ public class AlbumRepositoryTest {
     }
 
     @Test
-    public void testInsertAllAlbumsByArtist4() throws AlbumJsonException, ApiGetFailed, JsonProcessingException, SQLException {
+    public void testInsertAllAlbumsByArtist4() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException, SQLException {
         String artist = "Alvvays";
         List<FmAlbum> albums = lastFmWrapper.getAllAlbumsByArtist(artist);
         for (FmAlbum album : albums) {
             repository.insert(album);
-            assertTrue(repository.exists(album));
+            assertTrue(repository.exists(identify(album)));
         }
     }
 
 
     @Test
-    public void testInsertTwoStar() throws AlbumJsonException, ApiGetFailed, JsonProcessingException, NotSavedException, SQLException {
+    public void testInsertTwoStar() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException, NotSavedException, SQLException {
         String artist = "Mk.gee";
         String title = "Two Star & The Dream Police";
         FmAlbum album = lastFmWrapper.getAlbum(artist, title);
         try {
             repository.insert(album);
-            assertTrue(repository.exists(album));
+            assertTrue(repository.exists(identify(album)));
         } catch (NotSavedException e) {
             assertThrows(NotSavedException.class, () -> {
                 repository.insert(album);

@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 
 // T is a entity like an FmAlbum, FmTrack
-public abstract class AbstractRepository<T> implements Table<T> {
+public abstract class AbstractRepository<T, ID> implements Table<T, ID> {
     Logger logger = LoggerFactory.getLogger(AbstractRepository.class);
     Connection connection;
 
@@ -56,18 +56,12 @@ public abstract class AbstractRepository<T> implements Table<T> {
     abstract String deleteSql();
 
     @Override
-    public boolean exists(T entity) throws SQLException {
-        return false;
-    }
+    public abstract boolean exists(ID id);
 
     @Override
     public void insert(T entity) throws SQLException, NotSavedException {
         connection.setAutoCommit(false);
         try {
-            if (exists(entity)) {
-                logger.info("Not saved.");
-                throw new NotSavedException(entity + " already exists. No insertion");
-            }
             logger.info("Inserting");
             doInsert(entity);
             connection.commit();
@@ -85,10 +79,6 @@ public abstract class AbstractRepository<T> implements Table<T> {
     public void update(T entity) throws SQLException, NotUpdatedException {
         connection.setAutoCommit(false);
         try {
-            if (!exists(entity)) {
-                logger.info("Not updated.");
-                throw new NotUpdatedException(entity + " does not exist.");
-            }
             logger.info("Updating.");
             doUpdate(entity);
             connection.commit();
@@ -104,10 +94,6 @@ public abstract class AbstractRepository<T> implements Table<T> {
     public void delete(T entity) throws SQLException, NotDeletedException {
         connection.setAutoCommit(false);
         try {
-            if (!exists(entity)) {
-                logger.info("Not deleted.");
-                throw new NotDeletedException(entity + " does not exist in the database");
-            }
             logger.info("Deleting.");
             doDelete(entity);
             connection.commit();

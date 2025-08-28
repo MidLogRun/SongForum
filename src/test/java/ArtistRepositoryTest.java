@@ -1,5 +1,4 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.jayway.jsonpath.internal.function.sequence.Last;
 import database.ArtistRepository;
 import database.Connector;
 import database.NotDeletedException;
@@ -8,7 +7,8 @@ import http.server.externalapis.LastFmWrapper;
 import http.server.externalapis.Requester;
 import http.server.externalapis.spotify.ApiGetFailed;
 import http.server.externalapis.spotify.LastFmRequestStrategy;
-import http.server.json_readers.AlbumJsonException;
+import http.server.json_readers.JsonResponseReaderException;
+import http.server.object_files.ArtistId;
 import http.server.object_files.FmArtist;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,25 +32,29 @@ public class ArtistRepositoryTest {
         apiWrapper = new LastFmWrapper(requester);
     }
 
+    public ArtistId identify(FmArtist artist) {
+        return new ArtistId(artist.name());
+    }
+
     @Test
-    public void insertOneArtist() throws SQLException, AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void insertOneArtist() throws SQLException, JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         String name = "Roger Miller";
         FmArtist artist = apiWrapper.getArtist(name);
         try {
             repo.insert(artist);
-            assertTrue(repo.exists(artist));
+            assertTrue(repo.exists(identify(artist)));
             artist = repo.getArtistByName(name);
             assertTrue(artist.similarArtists().isEmpty()); //since we are inserting one artist into an empty db, this will be 0
             assertFalse(artist.tags().isEmpty());
             repo.delete(artist);
-            assertFalse(repo.exists(artist));
+            assertFalse(repo.exists(identify(artist)));
         } catch (NotSavedException | NotDeletedException e) {
             System.err.println(e.getMessage());
         }
     }
 
     @Test
-    public void permanentInsertManyArtists() throws SQLException, AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void permanentInsertManyArtists() throws SQLException, JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         List<String> artistNames = List.of("The Killers", "The Strokes", "AC/DC", "Bruce Springsteen");
         List<FmArtist> artists = apiWrapper.getArtists(artistNames);
         try {
@@ -66,7 +70,7 @@ public class ArtistRepositoryTest {
     }
 
     @Test
-    public void getAllArtistsWithTag() throws AlbumJsonException, ApiGetFailed, JsonProcessingException, SQLException {
+    public void getAllArtistsWithTag() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException, SQLException {
         String tagName = "indie";
         List<FmArtist> artists = repo.getArtistsByTag(tagName);
         assertFalse(artists.isEmpty());
@@ -74,7 +78,7 @@ public class ArtistRepositoryTest {
     }
 
     @Test
-    public void testInsertMultipleArtists() throws SQLException, AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void testInsertMultipleArtists() throws SQLException, JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         String n1 = "Roger Miller";
         String n2 = "Stonewall Jackson";
         String n3 = "Faron Young";
@@ -86,28 +90,28 @@ public class ArtistRepositoryTest {
             repo.insert(a1);
             repo.insert(a2);
             repo.insert(a3);
-            assertTrue(repo.exists(a1));
-            assertTrue(repo.exists(a2));
-            assertTrue(repo.exists(a3));
+            assertTrue(repo.exists(identify(a1)));
+            assertTrue(repo.exists(identify(a2)));
+            assertTrue(repo.exists(identify(a3)));
             a1 = repo.getArtistByName(n1);
             a2 = repo.getArtistByName(n2);
             a3 = repo.getArtistByName(n3);
             assertTrue(a1.similarArtists().isEmpty()); //we inserted a1 before any of the others
-            assertTrue(a2.similarArtists().isEmpty());
+            assertFalse(a2.similarArtists().isEmpty());
             assertFalse(a3.similarArtists().isEmpty());
             repo.delete(a1);
             repo.delete(a2);
             repo.delete(a3);
-            assertFalse(repo.exists(a1));
-            assertFalse(repo.exists(a2));
-            assertFalse(repo.exists(a3));
+            assertFalse(repo.exists(identify(a1)));
+            assertFalse(repo.exists(identify(a2)));
+            assertFalse(repo.exists(identify(a3)));
         } catch (NotSavedException | NotDeletedException e) {
             System.err.println(e.getMessage());
         }
     }
 
     @Test
-    public void insertMultipleThenCheckAdjacentArtists() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void insertMultipleThenCheckAdjacentArtists() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         String n1 = "Bon Iver";
         String n2 = "Sufjan Stevens";
 
@@ -139,7 +143,7 @@ public class ArtistRepositoryTest {
     }
 
     @Test
-    public void insertOneThenCheckTags() throws AlbumJsonException, ApiGetFailed, JsonProcessingException {
+    public void insertOneThenCheckTags() throws JsonResponseReaderException, ApiGetFailed, JsonProcessingException {
         String name = "Roger Miller";
         FmArtist artist = apiWrapper.getArtist(name);
         assertFalse(artist.tags().isEmpty());
@@ -147,10 +151,10 @@ public class ArtistRepositoryTest {
         try {
             repo.insert(artist);
             artist = repo.getArtistByName(name);
-            assertTrue(repo.exists(artist));
+            assertTrue(repo.exists(identify(artist)));
             assertFalse(artist.tags().isEmpty());
             repo.delete(artist);
-            assertFalse(repo.exists(artist));
+            assertFalse(repo.exists(identify(artist)));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } catch (NotDeletedException e) {

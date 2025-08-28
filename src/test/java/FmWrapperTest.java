@@ -3,7 +3,7 @@ import http.server.externalapis.LastFmWrapper;
 import http.server.externalapis.Requester;
 import http.server.externalapis.spotify.ApiGetFailed;
 import http.server.externalapis.spotify.LastFmRequestStrategy;
-import http.server.json_readers.AlbumJsonException;
+import http.server.json_readers.JsonResponseReaderException;
 import http.server.object_files.FmAlbum;
 import http.server.object_files.FmArtist;
 import http.server.object_files.FmTrack;
@@ -29,7 +29,7 @@ public class FmWrapperTest {
 
 
     @Test
-    public void testConvertLastFmAlbumResponseToAlbum() throws ApiGetFailed, AlbumJsonException, JsonProcessingException {
+    public void testConvertLastFmAlbumResponseToAlbum() throws ApiGetFailed, JsonResponseReaderException, JsonProcessingException {
         String artist = "Bon Iver";
         String title = "22, A Million";
         FmAlbum album = apiWrapper.getAlbum("Bon Iver", "22, A Million");
@@ -40,7 +40,7 @@ public class FmWrapperTest {
     }
 
     @Test
-    public void testConvertLastFmTrackResponseToTrack() throws ApiGetFailed, AlbumJsonException, JsonProcessingException {
+    public void testConvertLastFmTrackResponseToTrack() throws ApiGetFailed, JsonResponseReaderException, JsonProcessingException {
         String artist = "Bon Iver";
         String title = "beach baby";
 
@@ -52,7 +52,7 @@ public class FmWrapperTest {
     }
 
     @Test
-    public void testConvertLastFmArtistResponseToArtist() throws ApiGetFailed, AlbumJsonException, JsonProcessingException {
+    public void testConvertLastFmArtistResponseToArtist() throws ApiGetFailed, JsonResponseReaderException, JsonProcessingException {
         String artist = "Bon Iver";
         FmArtist fmArtist = apiWrapper.getArtist(artist);
         assertNotNull(fmArtist, "the artist object should never be null");
@@ -60,7 +60,7 @@ public class FmWrapperTest {
     }
 
     @Test
-    public void testGetAllAlbumsOfArtist() throws ApiGetFailed, AlbumJsonException, JsonProcessingException {
+    public void testGetAllAlbumsOfArtist() throws ApiGetFailed, JsonResponseReaderException, JsonProcessingException {
         String artist = "Bon Iver";
         List<FmAlbum> albums = apiWrapper.getAllAlbumsByArtist(artist);
         assertTrue(albums.size() > 4);

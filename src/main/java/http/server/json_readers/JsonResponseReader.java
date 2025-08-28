@@ -11,10 +11,10 @@ import java.util.List;
 public class JsonResponseReader {
 
 
-    public static FmAlbum getAlbum(JsonNode node, FmArtist fmArtist) throws AlbumJsonException {
+    public static FmAlbum getAlbum(JsonNode node, FmArtist fmArtist) throws JsonResponseReaderException {
         JsonNode albumArray = node.get("album");
         if (albumArray == null) {
-            throw new AlbumJsonException("No album found");
+            throw new JsonResponseReaderException("No album found");
         }
         return buildAlbum(albumArray, fmArtist);
     }
@@ -36,11 +36,11 @@ public class JsonResponseReader {
         return tags;
     }
 
-    private static List<FmTrack> getTracks(JsonNode node, String albumName) throws AlbumJsonException {
-        if (node == null) throw new AlbumJsonException("No track found");
+    private static List<FmTrack> getTracks(JsonNode node, String albumName) throws JsonResponseReaderException {
+        if (node == null) throw new JsonResponseReaderException("No track found");
         JsonNode tracksNode = node.get("track");
         if (tracksNode == null || !tracksNode.isArray()) {
-            throw new AlbumJsonException("No tracks found");
+            throw new JsonResponseReaderException("No tracks found");
         }
 
         List<FmTrack> tracks = new ArrayList<>();
@@ -68,14 +68,14 @@ public class JsonResponseReader {
         if (tags.isEmpty()) return false;
         try {
             getTracks(albumArray.get("tracks"), albumArray.get("name").asText());
-        } catch (AlbumJsonException e) {
+        } catch (JsonResponseReaderException e) {
             return false;
         }
 
         return true;
     }
 
-    private static FmAlbum buildAlbum(JsonNode albumArrayNode, FmArtist artist) throws AlbumJsonException {
+    private static FmAlbum buildAlbum(JsonNode albumArrayNode, FmArtist artist) throws JsonResponseReaderException {
         String title = albumArrayNode.get("name").asText();
         String url = albumArrayNode.get("url").asText();
         Integer listeners = Integer.parseInt(albumArrayNode.get("listeners").asText());
@@ -94,10 +94,10 @@ public class JsonResponseReader {
     }
 
 
-    public static FmTrack getTrack(JsonNode node) throws AlbumJsonException {
+    public static FmTrack getTrack(JsonNode node) throws JsonResponseReaderException {
         JsonNode trackNode = node.get("track");
         if (trackNode == null) {
-            throw new AlbumJsonException("trackNode is null");
+            throw new JsonResponseReaderException("trackNode is null");
         }
 
         Integer duration = Integer.parseInt(trackNode.get("duration").asText()) / 1000; //divide by 1000 to get seconds
@@ -121,10 +121,10 @@ public class JsonResponseReader {
     }
 
 
-    public static FmArtist getArtist(JsonNode node) throws AlbumJsonException {
+    public static FmArtist getArtist(JsonNode node) throws JsonResponseReaderException {
         JsonNode artistNode = node.get("artist");
         if (artistNode == null) {
-            throw new AlbumJsonException("artistNode is null");
+            throw new JsonResponseReaderException("artistNode is null");
         }
 
         String name = artistNode.get("name").asText();
@@ -135,14 +135,14 @@ public class JsonResponseReader {
         return new FmArtist(name, url, tags, similar, summary);
     }
 
-    public static List<String> extractAlbumNames(JsonNode node) throws AlbumJsonException {
+    public static List<String> extractAlbumNames(JsonNode node) throws JsonResponseReaderException {
         JsonNode topArray = node.get("topalbums");
         if (topArray == null) {
-            throw new AlbumJsonException("topalbums is null");
+            throw new JsonResponseReaderException("topalbums is null");
         }
         JsonNode albumsArray = topArray.get("album");
         if (albumsArray == null) {
-            throw new AlbumJsonException("albums is null");
+            throw new JsonResponseReaderException("albums is null");
         }
         List<String> albumNames = new ArrayList<>();
         for (JsonNode albumNode : albumsArray) {

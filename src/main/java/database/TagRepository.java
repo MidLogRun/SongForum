@@ -4,8 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class TagRepository extends AbstractRepository<String> {
+public class TagRepository extends AbstractRepository<String, String> {
     public TagRepository(Connection connection) {
         super(connection);
     }
@@ -63,6 +65,20 @@ public class TagRepository extends AbstractRepository<String> {
     }
 
     @Override
+    public boolean exists(String s) {
+        String sql = "SELECT * FROM tag WHERE name = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, s);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException e) {
+            logger.info("SQLException in checking tag Existence: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
     public Connection getConnection() throws SQLException {
         return this.connection;
     }
@@ -78,5 +94,20 @@ public class TagRepository extends AbstractRepository<String> {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public List<String> getAlbumTags(Integer albumId) throws NotFoundException {
+        String sql = "SELECT tg.name FROM tag tg JOIN album_tag at ON at.tag_id = tg.id WHERE at.album_id = ?";
+        List<String> tags = new ArrayList<>();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, albumId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                tags.add(resultSet.getString("name"));
+            }
+        } catch (SQLException e) {
+            throw new NotFoundException(e.getMessage());
+        }
+        return tags;
     }
 }
